@@ -4,8 +4,8 @@
   "description": "A forum API built with DDD! 💬",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "test": "vitest run",
     "test:watch": "vitest"
   },
