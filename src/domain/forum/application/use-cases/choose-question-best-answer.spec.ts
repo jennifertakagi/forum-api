@@ -1,62 +1,42 @@
 import { InMemoryAnswersRepository } from 'test/repositories/in-memory-answers-repository'
 import { makeAnswer } from 'test/factories/make-answer'
-import { UniqueEntityID } from '@/core/entities/unique-entity-id'
-import { InMemoryQuestionsRepository } from 'test/repositories/in-memory-questions-repository'
-import { ChooseQuestionBestAnswerUseCase } from '@/domain/forum/application/use-cases/choose-question-best-answer'
-import { makeQuestion } from 'test/factories/make-question'
-import { NotAllowedError } from '@/domain/forum/application/use-cases/errors/not-allowed-error'
+import { InMemoryAnswerCommentsRepository } from 'test/repositories/in-memory-answer-comments-repository'
+import { CommentOnAnswerUseCase } from '@/domain/forum/application/use-cases/comment-on-answer'
+import { InMemoryAnswerAttachmentsRepository } from 'test/repositories/in-memory-answer-attachments-repository'
 
-let inMemoryQuestionsRepository: InMemoryQuestionsRepository
+let inMemoryAnswerAttachmentsRepository: InMemoryAnswerAttachmentsRepository
 let inMemoryAnswersRepository: InMemoryAnswersRepository
-let sut: ChooseQuestionBestAnswerUseCase
+let inMemoryAnswerCommentsRepository: InMemoryAnswerCommentsRepository
+let sut: CommentOnAnswerUseCase
 
-describe('Choose Question Best Answer', () => {
+describe('Comment on Answer', () => {
   beforeEach(() => {
-    inMemoryQuestionsRepository = new InMemoryQuestionsRepository()
-    inMemoryAnswersRepository = new InMemoryAnswersRepository()
+    inMemoryAnswerAttachmentsRepository =
+      new InMemoryAnswerAttachmentsRepository()
+    inMemoryAnswersRepository = new InMemoryAnswersRepository(
+      inMemoryAnswerAttachmentsRepository,
+    )
+    inMemoryAnswerCommentsRepository = new InMemoryAnswerCommentsRepository()
 
-    sut = new ChooseQuestionBestAnswerUseCase(
-      inMemoryQuestionsRepository,
+    sut = new CommentOnAnswerUseCase(
       inMemoryAnswersRepository,
+      inMemoryAnswerCommentsRepository,
     )
   })
 
-  it('should be able to choose the question best answer', async () => {
-    const question = makeQuestion()
+  it('should be able to comment on answer', async () => {
+    const answer = makeAnswer()
 
-    const answer = makeAnswer({
-      questionId: question.id,
-    })
-
-    await inMemoryQuestionsRepository.create(question)
     await inMemoryAnswersRepository.create(answer)
 
     await sut.execute({
       answerId: answer.id.toString(),
-      authorId: question.authorId.toString(),
+      authorId: answer.authorId.toString(),
+      content: 'Comentário teste',
     })
 
-    expect(inMemoryQuestionsRepository.items[0].bestAnswerId).toEqual(answer.id)
-  })
-
-  it('should not be able to to choose another user question best answer', async () => {
-    const question = makeQuestion({
-      authorId: new UniqueEntityID('author-1'),
-    })
-
-    const answer = makeAnswer({
-      questionId: question.id,
-    })
-
-    await inMemoryQuestionsRepository.create(question)
-    await inMemoryAnswersRepository.create(answer)
-
-    const result = await sut.execute({
-      answerId: answer.id.toString(),
-      authorId: 'author-2',
-    })
-
-    expect(result.isLeft()).toBe(true)
-    expect(result.value).toBeInstanceOf(NotAllowedError)
+    expect(inMemoryAnswerCommentsRepository.items[0].content).toEqual(
+      'Comentário teste',
+    )
   })
 })
