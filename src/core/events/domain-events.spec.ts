@@ -32,19 +32,19 @@ describe('domain events', () => {
   it('should be able to dispatch and listen to events', async () => {
     const callbackSpy = vi.fn()
 
-    // Subscriber cadastrado (ouvindo o evento de "resposta criada")
+    // Registering subscriber (listening to the "response created" event)
     DomainEvents.register(callbackSpy, CustomAggregateCreated.name)
 
-    // Estou criando uma resposta porém SEM salvar no banco
+    // Creating a response but WITHOUT saving it to the bank
     const aggregate = CustomAggregate.create()
 
     // Estou assegurando que o evento foi criado porém NÃO foi disparado
     expect(aggregate.domainEvents).toHaveLength(1)
 
-    // Estou salvando a resposta no banco de dados e assim disparando o evento
+    // Ensuring that the event was created but was NOT fired
     DomainEvents.dispatchEventsForAggregate(aggregate.id)
 
-    // O subscriber ouve o evento e faz o que precisa ser feito com o dado
+    // The subscriber listens to the event and does what needs to be done with the data
     expect(callbackSpy).toHaveBeenCalled()
 
     expect(aggregate.domainEvents).toHaveLength(0)
